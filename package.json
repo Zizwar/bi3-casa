@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "html-metadata-parser": "^1.0.3",
     "next": "10.x",
     "react": "17.x",
     "react-dom": "17.x"

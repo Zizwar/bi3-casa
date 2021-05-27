@@ -1,0 +1,8 @@
+  
+tasks:
+  - init: yarn install && yarn run build
+    command: yarn run dev
+
+vscode:
+  extensions:
+    - esbenp.prettier-vscode@5.7.2:uyRGbFR3U94Ki5fjjZ7aoQ==
