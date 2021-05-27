@@ -106,9 +106,9 @@ const isUrl = (s) => {
 
 
 
-export default (x, callback) => {
+export default (x) => {
 
-
+return new Promise ((resolve_, reject_) => {
 
     let o = {
         method: 'get',
@@ -126,7 +126,7 @@ export default (x, callback) => {
         o = Object.assign(o, { url: x });
     }
 
-    return new Promise(function (resolve, reject) {
+   // return new Promise(function (resolve, reject) {
         axios(o).then(function ({ data }) {
 
             const og = {}, meta = {};
@@ -174,14 +174,15 @@ export default (x, callback) => {
 
             const result = { meta: meta, og: og, images: images($) };
 
-            callback && callback(null, result);
-            resolve(result);
+           // callback && resolve_(result);
+            resolve_(result);
 
         }).catch(function (err) {
-            callback && callback(err, null);
-            reject(err);
+           // callback && re(err, null);
+            reject_(err);
         })
-    });
+  //  });
 
 
+})
 }
