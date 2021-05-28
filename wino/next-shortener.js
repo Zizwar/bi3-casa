@@ -3,35 +3,25 @@ import { parse } from 'node-html-parser';
 import axios from 'axios';
 
 
-const isUrl = (s) => {
-    return s && /((http(s)?):\/\/[\w\.\/\-=?#]+)/i.test(s);
-},
-
-    trim = (s) => {
-        return (s && s.trim && s.trim().replace(/\s+/g, ' ')) || '';
-    },
-
+const isUrl = (url) =>
+    url && /((http(s)?):\/\/[\w\.\/\-=?#]+)/i.test(url),
+    setHttp = (url) => url.includes('http') ? url : `http://${url}`,
+    trim = (s) => (s && s.trim && s.trim().replace(/\s+/g, ' ')) || '',
     readMT = (el, name) => {
-        var attr = el.getAttribute('name') || el.getAttribute('property');
+        const attr = el.getAttribute('name') || el.getAttribute('property');
         return attr == name ? el.getAttribute('content') : null;
     },
 
     images = ($, t) => {
-
-        var images = [];
-        var _this = this;
+        const images = [];
         if (t == 'og') {
-
             $.querySelectorAll('meta').forEach(function (el) {
-
-                var propName = el.getAttribute('property') || el.getAttribute('name');
-                var content = el.getAttribute('content');
+                const propName = el.getAttribute('property') || el.getAttribute('name');
+                const content = el.getAttribute('content');
                 if (propName === 'og:image' || propName === 'og:image:url') {
                     images.push({ url: content });
                 }
-
-                var current = images[images.length - 1] || {};
-
+                const current = images[images.length - 1] || {};
                 switch (propName) {
                     case 'og:image:secure_url':
                         current.secure_url = content;
@@ -49,39 +39,29 @@ const isUrl = (s) => {
             });
         }
         else {
-
             $.querySelectorAll('img').forEach(function (el) {
-
-                var src = el.getAttribute('src');
-
+                const src = el.getAttribute('src');
                 if (src && isUrl(src)) {
-
-                    var width = el.getAttribute('width');
-                    var height = el.getAttribute('height');
-                    var img = { url: src };
+                    const width = el.getAttribute('width');
+                    const height = el.getAttribute('height');
+                    const img = { url: src };
                     if (width) { img.width = parseInt(width, 10); }
                     if (height) { img.height = parseInt(height, 10); }
                     images.push(img);
                 }
             });
-
         }
-
         return images;
     },
-
     videos = ($) => {
-        var videos = [];
-
+        const videos = [];
         $.querySelectorAll('meta').forEach(function (el) {
-            var propName = el.getAttribute('property') || el.getAttribute('name');
-            var content = el.getAttribute('content');
-
+            const propName = el.getAttribute('property') || el.getAttribute('name');
+            const content = el.getAttribute('content');
             if (propName === 'og:video' || propName === 'og:video:url') {
                 videos.push({ url: content });
             }
-
-            var current = videos[videos.length - 1];
+            const current = videos[videos.length - 1];
 
             switch (propName) {
                 case 'og:video:secure_url':
@@ -97,37 +77,32 @@ const isUrl = (s) => {
                     current.height = parseInt(content, 10);
                     break;
             }
-
         });
-
-
         return videos;
     };
 
+export default (url) => {
+
+    return new Promise((resolve_, reject_) => {
+        if (!url) return reject_({ message: "not url :(" })
+        let params = {
+            method: 'get',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36 OPR/68.0.3618.63',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
+        };
+
+        url = setHttp(url)
+        console.log({ url })
+        if (!isUrl(url))
+            return reject_({ message: "bad url :(" })
+
+        params = Object.assign(params, { url });
 
 
-export default (x) => {
-
-return new Promise ((resolve_, reject_) => {
-
-    let o = {
-        method: 'get',
-        headers: {
-            //'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36 OPR/68.0.3618.63',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        }
-
-    };
-
-    if (typeof x === 'object' && x !== null) {
-        o = Object.assign(o, x);
-    } else if (isUrl(x)) {
-        o = Object.assign(o, { url: x });
-    }
-
-   // return new Promise(function (resolve, reject) {
-        axios(o).then(function ({ data }) {
+        // return new Promise(function (resolve, reject) {
+        axios(params).then(function ({ data }) {
 
             const og = {}, meta = {};
             const $ = parse(data);
@@ -172,17 +147,17 @@ return new Promise ((resolve_, reject_) => {
 
             }
 
-            const result = { meta: meta, og: og, images: images($) };
+            const result = { meta, og, images: images($) };
 
-           // callback && resolve_(result);
+            // callback && resolve_(result);
             resolve_(result);
 
         }).catch(function (err) {
-           // callback && re(err, null);
+            // callback && re(err, null);
             reject_(err);
         })
-  //  });
+        //  });
 
 
-})
+    })
 }
